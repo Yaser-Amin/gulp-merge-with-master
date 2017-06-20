@@ -37,3 +37,5 @@ Path for the master JSON file
 ## License
 
 MIT © [Yaser Amin](https://github.com/Yaser-Amin)
+
+> inspired by https://www.npmjs.com/package/gulp-copy

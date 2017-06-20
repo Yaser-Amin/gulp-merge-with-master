@@ -1,162 +1,64 @@
-'use strict';
-
-var through = require('through2');
-var path = require('path');
-var fs = require('fs');
-var PluginError = require('gulp-util').PluginError;
-var deepMerge = require('deepmerge');
-
-/**
- * gulp MergeMaster method
- * @param {string} destination
- * @param {object} opts
- * @returns {object}
+/*
+ * gulp-merge-with-master
+ * 
+ * Copyright (c) 2017 Yaser, contributors
+ * Licensed under the MIT license.
+ * https://github.com/Yaser-Amin/gulp-merge-with-master/blob/master/LICENSE
  */
-function gulpMergeMaster(destination, opts) {
-    var throughOptions = { objectMode: true };
 
-    // Make sure a destination was verified
-    if (typeof destination !== 'string') {
-        throw new PluginError('gulp-merge-master', 'No valid destination specified');
-    }
+// through2 is a thin wrapper around node transform streams
+const through = require('through2');
+const gutil = require('gulp-util');
+const PluginError = gutil.PluginError;
+const deepMerge = require('deepmerge');
+const fs = require('fs');
 
-    // Default options
-    if (opts === undefined) {
-        opts = opts || {};
-    }
-    else if (typeof opts !== 'object' || opts === null) {
-        throw new PluginError('gulp-merge-master', 'No valid options specified');
-    }
-    else if (!opt.master) throw new PluginError('gulp-merge-master', 'master option is is required');
+// ConstsÍ
+const PLUGIN_NAME = 'gulp-merge-master';
 
-    return through(throughOptions, transform);
-
-    /**
-     * Transform method, copies the file to its new destination
-     * @param {object} file
-     * @param {string} encoding
-     * @param {function} cb
-     */
-    function transform(file, encoding, cb) {
-        var rel = null;
-        var fileDestination = null;
-
-        if (file.isStream()) {
-            return cb(new PluginError('gulp-merge-master', 'Streaming not supported'));
-        }
-
-        if (!file.isNull()) {
-            rel = path.relative(file.cwd, file.path).replace(/\\/g, '/');
-
-            // Strip path prefixes
-            if (opts.prefix) {
-                var p = opts.prefix;
-                while (p-- > 0) {
-                    rel = rel.substring(rel.indexOf('/') + 1);
-                }
-            }
-
-            fileDestination = destination + '/' + rel;
-
-            // Make sure destination exists
-            if (!doesPathExist(fileDestination)) {
-                createDestination(fileDestination.substr(0, fileDestination.lastIndexOf('/')));
-            }
-
-            // MergeMaster the file
-            MergeMasterFile(file.path, fileDestination, opt.master, function (error) {
-                if (error) {
-                    throw new PluginError('gulp-merge-master', 'Could not merge file <' + file.path + '>: ' + error.message);
-                }
-
-                // Update path for file so this path is used later on
-                file.path = fileDestination;
-                cb(null, file);
-            });
-        }
-        else {
-            cb(null, file);
-        }
-    }
+function prefixStream(prefixText) {
+  var stream = through();
+  stream.write(prefixText);
+  return stream;
 }
 
-/**
- * Recursively creates the path
- * @param {string} destination
- */
-function createDestination(destination) {
-    var folders = destination.split('/');
-    var path = [];
-    var l = folders.length;
-    var i = 0;
-
-    for (i; i < l; i++) {
-        path.push(folders[i]);
-
-        if (folders[i] !== '' && !doesPathExist(path.join('/'))) {
-            try {
-                fs.mkdirSync(path.join('/'));
-            } catch (error) {
-                throw new PluginError('gulp-merge-master', 'Could not create destination <' + destination + '>: ' + error.message);
-            }
-        }
+function mergeContents(obj, masterObj) {
+  return deepMerge(masterObj, obj, {
+    arrayMerge:
+    (destinationArray, sourceArray, options) => {
+      destinationArray
+      sourceArray
+      options
+      return destinationArray.concat(sourceArray)
     }
+  });
 }
 
-/**
- * Check if the path exists
- * @param path
- * @returns {boolean}
- */
-function doesPathExist(path) {
-    var pathExists = true;
+// Plugin level function(dealing with files)
+function gulpMergeMaster(masterFilePath) {
 
-    try {
-        fs.accessSync(path);
+  if (typeof masterFilePath !== 'string') throw new PluginError(PLUGIN_NAME, 'Missing prefix text!');
+  let masterFileContent = JSON.parse(fs.readFileSync(masterFilePath)); // allocate ahead of time
+
+  // Creating a stream through which each file will pass
+  return through.obj(function (file, enc, cb) {
+    if (file.isNull()) {
+      // return empty file
+      return cb(null, file);
     }
-    catch (error) {
-        pathExists = false;
+    let fileContent = JSON.stringify(mergeContents(JSON.parse(file.contents), masterFileContent));
+    if (file.isBuffer()) {
+      file.contents = new Buffer(fileContent);
+    }
+    if (file.isStream()) {
+      file.contents = prefixStream(fileContent);
     }
 
-    return pathExists;
+    cb(null, file);
+
+  });
+
 }
 
-/**
- * MergeMaster a file to its new destination
- * @param {string} source
- * @param {string} target
- * @param {function} MergeMasterCallback
- */
-function MergeMasterFile(source, target, masterPath, MergeMasterCallback) {
-    var done = false;
-
-    const masterContent = JSON.parse(fs.readFileSync(masterPath));
-    const fileContent = JSON.parse(fs.readFileSync(source));
-    let content = deepMerge(masterContent, fileContent, { arrayMerge: concatMerge });
-    fs.writeFileSync(target,JSON.stringify(content));
-
-    /*var readStream = fs.createReadStream(source);
-    var writeStream = fs.createWriteStream(target);
-
-    readStream.on('error', MergeMasterDone);
-    writeStream.on('error', MergeMasterDone);
-
-    writeStream.on('close', function () {*/
-        MergeMasterDone(null);
-    /*});
-
-    readStream.pipe(writeStream);*/
-
-    /**
-     * Finish MergeMastering. Reports error when needed
-     * @param [error] optional error
-     */
-    function MergeMasterDone(error) {
-        if (!done) {
-            done = true;
-            MergeMasterCallback(error);
-        }
-    }
-}
-
+// Exporting the plugin main function
 module.exports = gulpMergeMaster;
