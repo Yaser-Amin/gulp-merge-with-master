@@ -1,0 +1,19 @@
+{
+  "name": "gulp-merge-with-master",
+  "version": "0.0.1",
+  "description": "A gulp plugin to merge JSON files with master file",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gulp",
+    "merge",
+    "JSON"
+  ],
+  "author": "Yase Amin",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  }
+}
