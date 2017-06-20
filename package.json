@@ -16,5 +16,14 @@
   "license": "MIT",
   "dependencies": {
     "deepmerge": "^1.4.4"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yaser-Amin/gulp-merge-with-master.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Yaser-Amin/gulp-merge-with-master/issues"
+  },
+  "homepage": "https://github.com/Yaser-Amin/gulp-merge-with-master#readme"
 }
