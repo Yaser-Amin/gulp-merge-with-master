@@ -17,16 +17,16 @@ var mergeWithMaser = require('gulp-merge-with-master');
 ### Usage
 
 ```js
-gulp.src('./src/**/*.json')
-    .pipe(mergeWithMaser({master:'./master.json'})
-    .pipe(gulp.dest('/dest/')))
+gulp.src(['src/**/*.json', '!src/api.json'])
+    .pipe(masterMerge('src/api.json'))
+    .pipe(gulp.dest('dest/')))
 ```
 
 ### API
 
-### mergeWithMaser([options])
+### mergeWithMaser(masterFilePath)
 
-#### options.master
+#### masterFilePath
 
 Type: `string`
 
@@ -37,5 +37,3 @@ Path for the master JSON file
 ## License
 
 MIT © [Yaser Amin](https://github.com/Yaser-Amin)
-
-> inspired by https://www.npmjs.com/package/gulp-copy
